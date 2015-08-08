@@ -25,6 +25,11 @@ function findDeps(part) {
 function getActualVersion(name) {
   var currentSrc = path.resolve(dir, name, 'package.json');
   var parentSrc = path.resolve(dir, '../..', name, 'package.json');
+  /*
+      Node looks for the package all up the tree. 
+      require.resolve will return this path without actually loading the package.
+  */
+  var treeSrc =  require.resolve(name);
   var pkg;
   // Check in directory requested
   if (fs.existsSync(currentSrc)) {
@@ -33,6 +38,17 @@ function getActualVersion(name) {
   // Check in parent directory for case of peerDependencies
   else if (fs.existsSync(parentSrc)) {
     pkg = require(parentSrc);
+  }
+  else if(fs.existsSync(treeSrc)) {
+    /*
+      require.resolve() will return path for index.js of the package.
+      Using regex to get to package.json of package.
+    */
+    var reg = new RegExp(name+'.*');
+    var replacing_string = name+'/'+'package.json';
+    var actualPath = treeSrc.replace(reg,replacing_string);
+    if(fs.existsSync(actualPath))
+     pkg = require(actualPath);
   }
   return pkg ? pkg.version : '';
 }
