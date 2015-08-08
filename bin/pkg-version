@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var path = require('path');
+var dir = process.argv[2] || process.cwd();
+var packages = [];
+
+function findDeps(part) {
+  var packages = [];
+  if (!part || typeof part !== 'object') {
+    return packages;
+  }
+
+  Object.keys(part).forEach(function (pkg) {
+    packages.push({
+      name: pkg,
+      wantedVersion: part[pkg],
+      actualVersion: getActualVersion(pkg)
+    });
+  });
+
+  return packages;
+}
+
+function getActualVersion(name) {
+  var currentSrc = path.resolve(dir, name, 'package.json');
+  var parentSrc = path.resolve(dir, '../..', name, 'package.json');
+  var pkg;
+  // Check in directory requested
+  if (fs.existsSync(currentSrc)) {
+    pkg = require(currentSrc);
+  }
+  // Check in parent directory for case of peerDependencies
+  else if (fs.existsSync(parentSrc)) {
+    pkg = require(parentSrc);
+  }
+  return pkg ? pkg.version : '';
+}
+
+function pad(content, count) {
+  return Array((count - content.length) + 1).join(' ');
+}
+
+function underline(text) {
+  return '\033[4m' + text + '\033[0m';
+}
+
+function highlightDiff(a, b) {
+  var text = '';
+  var partsA = a.split('');
+  var partsB = b.split('');
+
+  // Get rid of any semver stuff (~, ^, etc.)
+  while (partsA[0] && isNaN(parseInt(partsA[0], 10))) {
+    partsA.shift();
+  }
+
+  for (var i=0, l=partsA.length; i<l; i++) {
+    // If versions still line up shift the char from b
+    if (partsA[i] === partsB[0]) {
+      text += partsB.shift();
+    }
+    // As soon as they no longer match, we're done here
+    else {
+      break;
+    }
+  }
+  
+  // If anything is left in b, then it is different from a from here on out
+  if (partsB.length) {
+    text += '\033[0;35m';
+    text += partsB.join('');
+    text += '\033[0m';
+  }
+
+  return text;
+}
+
+// Make sure path ends with node_modules/ (prefer it not be passed as arg)
+if (!/\/$/.test(dir)) {
+  dir += '/';
+}
+if (!/node_modules\/$/.test(dir)) {
+  dir += 'node_modules/';
+}
+
+// Find all dependencies
+var masterPkg = require(path.resolve(dir, '../package.json'));
+packages = packages.concat(findDeps(masterPkg.dependencies));
+packages = packages.concat(findDeps(masterPkg.devDependencies));
+packages = packages.concat(findDeps(masterPkg.peerDependencies));
+
+// Calculate widths
+var header = [
+  'Package', 'Wanted', 'Actual'
+];
+var widths = [header[0].length, header[1].length, header[2].length];
+for (var i=0, l=packages.length; i<l; i++) {
+  var pkg = packages[i];
+  widths[0] = Math.max(widths[0], pkg.name.length);
+  widths[1] = Math.max(widths[1], pkg.wantedVersion.length);
+  widths[2] = Math.max(widths[2], pkg.actualVersion.length);
+}
+
+// Render
+if (packages.length > 0) {
+  console.log(
+    underline(header[0]), pad(header[0], widths[0]),
+    pad(header[1], widths[1]), underline(header[1]),
+    pad(header[2], widths[2]), underline(header[2])
+  );
+
+  for (var i=0, l=packages.length; i<l; i++) {
+    var pkg = packages[i];
+    console.log(
+      pkg.name, pad(pkg.name, widths[0]),
+      pad(pkg.wantedVersion, widths[1]), pkg.wantedVersion,
+      pad(pkg.actualVersion, widths[2]), highlightDiff(
+        pkg.wantedVersion,
+        pkg.actualVersion
+      )
+    );
+  }
+}
+

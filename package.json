@@ -1,0 +1,27 @@
+{
+  "name": "pkg-version",
+  "version": "0.0.0",
+  "description": "List a package's dependencies and installed versions",
+  "preferGlobal": true,
+  "bin": {
+    "pkg-version": "./bin/pkg-version"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "npm",
+    "package",
+    "version"
+  ],
+  "author": "Matt Zabriskie",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mzabriskie/pkg-version.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mzabriskie/pkg-version/issues"
+  },
+  "homepage": "https://github.com/mzabriskie/pkg-version"
+}
