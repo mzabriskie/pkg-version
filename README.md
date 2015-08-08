@@ -10,6 +10,16 @@ This module is meant to help identify what's different between the version `pack
 $ npm install -g pkg-version
 ```
 
+## Synopsis
+
+```bash
+$ pkg-version <folder>
+```
+
+- <folder>: A folder containing a package.json file
+
+Uses '.' if no argument supplied
+
 ## Usage
 
 Show dependencies for a package and highlight version differences.
@@ -29,7 +39,6 @@ karma-firefox-launcher      ^0.1.6    0.1.6
 karma-mocha                ^0.1.10   0.1.10
 karma-sourcemap-loader      ^0.3.5    0.3.5
 karma-webpack               ^1.5.1    1.6.0
-loom                        ^3.1.2    3.1.2
 mocha                       ^2.2.5    2.2.5
 webpack                    ^1.9.10   1.10.1
 webpack-dev-server          ^1.9.0   1.10.1
