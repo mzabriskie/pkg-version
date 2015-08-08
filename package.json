@@ -7,7 +7,9 @@
     "pkg-version": "./bin/pkg-version"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version": "git add .",
+    "postversion": "git push && git push --tags"
   },
   "keywords": [
     "npm",
