@@ -23,34 +23,39 @@ function findDeps(part) {
 }
 
 function getActualVersion(name) {
-  var currentSrc = path.resolve(dir, name, 'package.json');
-  var parentSrc = path.resolve(dir, '../..', name, 'package.json');
-  /*
-      Node looks for the package all up the tree. 
-      require.resolve will return this path without actually loading the package.
-  */
-  var treeSrc =  require.resolve(name);
-  var pkg;
-  // Check in directory requested
-  if (fs.existsSync(currentSrc)) {
-    pkg = require(currentSrc);
+  var version = '';
+  var pathLoaders = [
+    // Check in directory requested
+    function () {
+      return path.resolve(dir, name, 'package.json');
+    },
+    
+    // Check in parent directory for case of peerDependencies
+    function () {
+      return path.resolve(dir, '../..', name, 'package.json');
+    },
+
+    // Check further up the tree
+    function () {
+      return require.resolve(name).replace(new RegExp(name + '.*'), name + '/package.json');
+    }
+  ];
+
+  for (var i=0, l=pathLoaders.length; i<l; i++) {
+    var p;
+    try {
+      p = pathLoaders[i]();
+    } catch (e) {
+      // require.resolve will fail if module can't be found
+    }
+
+    if (p && fs.existsSync(p)) {
+      version = require(p).version;
+      break;
+    }
   }
-  // Check in parent directory for case of peerDependencies
-  else if (fs.existsSync(parentSrc)) {
-    pkg = require(parentSrc);
-  }
-  else if(fs.existsSync(treeSrc)) {
-    /*
-      require.resolve() will return path for index.js of the package.
-      Using regex to get to package.json of package.
-    */
-    var reg = new RegExp(name+'.*');
-    var replacing_string = name+'/'+'package.json';
-    var actualPath = treeSrc.replace(reg,replacing_string);
-    if(fs.existsSync(actualPath))
-     pkg = require(actualPath);
-  }
-  return pkg ? pkg.version : '';
+
+  return version;
 }
 
 function pad(content, count) {
