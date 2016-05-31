@@ -20,7 +20,7 @@ $ pkg-version [<folder>] [<options>]
 
 Uses '.' if no argument supplied
 
-*Options:*
+_Options:_
 
 - -a Include all dependencies (default).
 - -s Include all dependencies that appear in `dependencies`.
