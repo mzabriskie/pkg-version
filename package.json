@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/mzabriskie/pkg-version/issues"
   },
-  "homepage": "https://github.com/mzabriskie/pkg-version"
+  "homepage": "https://github.com/mzabriskie/pkg-version",
+  "dependencies": {
+    "minimist": "^1.2.0"
+  }
 }

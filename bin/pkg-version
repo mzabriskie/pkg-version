@@ -2,6 +2,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var argv = require('minimist')(process.argv.slice(2));
 
 /**
  * Find all the dependencies for a part of a package
@@ -129,10 +130,31 @@ function highlightDiff(a, b) {
   return text;
 }
 
+// Show help
+if (argv.h || argv.help) {
+  console.log('Usage: pkg-version [<folder>] [<options>]');
+  console.log('');
+  console.log('Options:');
+  console.log('  -a           Include all dependencies (default).');
+  console.log('  -s           Include all dependencies that appear in dependencies.');
+  console.log('  -d           Include all dependencies that appear in devDependencies.');
+  console.log('  -p           Include all dependencies that appear in peerDependencies.');
+  console.log('');
+  console.log('  --help       Print usage and options.');
+  console.log('  --version    Print current version.');
+}
+// Show version
+else if (argv.v || argv.version) {
+  console.log(require(path.resolve(__dirname, '../package.json')).version);
+}
 // Main program
+else {
 (function () {
-  var dir = process.argv[2] || process.cwd();
+  var dir = argv._[0] || process.cwd();
 
+  // Normalize options
+  argv.a = argv.a || (!argv.s && !argv.d && !argv.p);
+  
   // Make sure path ends with node_modules/ (prefer it not be passed as arg)
   if (!/\/$/.test(dir)) {
     dir += '/';
@@ -143,11 +165,16 @@ function highlightDiff(a, b) {
 
   // Find all dependencies
   var masterPkg = require(path.resolve(dir, '../package.json'));
-  var packages = [].concat(
-    findDeps(dir, masterPkg.dependencies),
-    findDeps(dir, masterPkg.devDependencies),
-    findDeps(dir, masterPkg.peerDependencies)
-  );
+  var packages = [];
+  if (argv.a || argv.s) {
+    Array.prototype.push.apply(packages, findDeps(dir, masterPkg.dependencies));
+  }
+  if (argv.a || argv.d) {
+    Array.prototype.push.apply(packages, findDeps(dir, masterPkg.devDependencies));
+  }
+  if (argv.a || argv.p) {
+    Array.prototype.push.apply(packages, findDeps(dir, masterPkg.peerDependencies));
+  }
 
   // Calculate widths
   var header = ['Package', 'Wanted', 'Actual'];
@@ -180,3 +207,4 @@ function highlightDiff(a, b) {
     }
   }
 })();
+}
