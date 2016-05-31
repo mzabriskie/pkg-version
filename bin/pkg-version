@@ -2,10 +2,15 @@
 
 var fs = require('fs');
 var path = require('path');
-var dir = process.argv[2] || process.cwd();
-var packages = [];
 
-function findDeps(part) {
+/**
+ * Find all the dependencies for a part of a package
+ *
+ * @param {String} dir The directory specified by the user
+ * @param {Object} part The part of the package to search (dependencies, peerDependencies, etc)
+ * @return {Array} List of dependencies (name, wanted, and actual version)
+ */
+function findDeps(dir, part) {
   var packages = [];
   if (!part || typeof part !== 'object') {
     return packages;
@@ -15,14 +20,21 @@ function findDeps(part) {
     packages.push({
       name: pkg,
       wantedVersion: part[pkg],
-      actualVersion: getActualVersion(pkg)
+      actualVersion: getActualVersion(dir, pkg)
     });
   });
 
   return packages;
 }
 
-function getActualVersion(name) {
+/**
+ * Get the actual installed version of a dependency
+ *
+ * @param {String} dir The directory specified by the user
+ * @param {String} name The name of the dependency
+ * @return {String} The actual installed version
+ */
+function getActualVersion(dir, name) {
   var version = '';
   var pathLoaders = [
     // Check in directory requested
@@ -58,14 +70,34 @@ function getActualVersion(name) {
   return version;
 }
 
+/**
+ * Create String of padded whitespace
+ *
+ * @param {String} content The content to be padded
+ * @param {Number} count The max number of characters that are needed
+ * @return {String}
+ */
 function pad(content, count) {
   return Array((count - content.length) + 1).join(' ');
 }
 
+/**
+ * Create underlined text
+ *
+ * @param {String} text The text to underline
+ * @return {String}
+ */
 function underline(text) {
   return '\033[4m' + text + '\033[0m';
 }
 
+/**
+ * Highlight the diff between to versions
+ *
+ * @param {String} a The primary version to be compared against
+ * @param {String} b The secondary version
+ * @return {String}
+ */
 function highlightDiff(a, b) {
   var text = '';
   var partsA = a.split('');
@@ -97,50 +129,54 @@ function highlightDiff(a, b) {
   return text;
 }
 
-// Make sure path ends with node_modules/ (prefer it not be passed as arg)
-if (!/\/$/.test(dir)) {
-  dir += '/';
-}
-if (!/node_modules\/$/.test(dir)) {
-  dir += 'node_modules/';
-}
+// Main program
+(function () {
+  var dir = process.argv[2] || process.cwd();
 
-// Find all dependencies
-var masterPkg = require(path.resolve(dir, '../package.json'));
-packages = packages.concat(findDeps(masterPkg.dependencies));
-packages = packages.concat(findDeps(masterPkg.devDependencies));
-packages = packages.concat(findDeps(masterPkg.peerDependencies));
+  // Make sure path ends with node_modules/ (prefer it not be passed as arg)
+  if (!/\/$/.test(dir)) {
+    dir += '/';
+  }
+  if (!/node_modules\/$/.test(dir)) {
+    dir += 'node_modules/';
+  }
 
-// Calculate widths
-var header = [
-  'Package', 'Wanted', 'Actual'
-];
-var widths = [header[0].length, header[1].length, header[2].length];
-for (var i=0, l=packages.length; i<l; i++) {
-  var pkg = packages[i];
-  widths[0] = Math.max(widths[0], pkg.name.length);
-  widths[1] = Math.max(widths[1], pkg.wantedVersion.length);
-  widths[2] = Math.max(widths[2], pkg.actualVersion.length);
-}
-
-// Render
-if (packages.length > 0) {
-  console.log(
-    underline(header[0]), pad(header[0], widths[0]),
-    pad(header[1], widths[1]), underline(header[1]),
-    pad(header[2], widths[2]), underline(header[2])
+  // Find all dependencies
+  var masterPkg = require(path.resolve(dir, '../package.json'));
+  var packages = [].concat(
+    findDeps(dir, masterPkg.dependencies),
+    findDeps(dir, masterPkg.devDependencies),
+    findDeps(dir, masterPkg.peerDependencies)
   );
 
+  // Calculate widths
+  var header = ['Package', 'Wanted', 'Actual'];
+  var widths = [header[0].length, header[1].length, header[2].length];
   for (var i=0, l=packages.length; i<l; i++) {
     var pkg = packages[i];
-    console.log(
-      pkg.name, pad(pkg.name, widths[0]),
-      pad(pkg.wantedVersion, widths[1]), pkg.wantedVersion,
-      pad(pkg.actualVersion, widths[2]), highlightDiff(
-        pkg.wantedVersion,
-        pkg.actualVersion
-      )
-    );
+    widths[0] = Math.max(widths[0], pkg.name.length);
+    widths[1] = Math.max(widths[1], pkg.wantedVersion.length);
+    widths[2] = Math.max(widths[2], pkg.actualVersion.length);
   }
-}
 
+  // Render
+  if (packages.length > 0) {
+    console.log(
+      underline(header[0]), pad(header[0], widths[0]),
+      pad(header[1], widths[1]), underline(header[1]),
+      pad(header[2], widths[2]), underline(header[2])
+    );
+
+    for (var i=0, l=packages.length; i<l; i++) {
+      var pkg = packages[i];
+      console.log(
+        pkg.name, pad(pkg.name, widths[0]),
+        pad(pkg.wantedVersion, widths[1]), pkg.wantedVersion,
+        pad(pkg.actualVersion, widths[2]), highlightDiff(
+          pkg.wantedVersion,
+          pkg.actualVersion
+        )
+      );
+    }
+  }
+})();
