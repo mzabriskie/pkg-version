@@ -18,7 +18,7 @@ $ pkg-version [<folder>] [<options>]
 
 - \<folder>: A folder containing a package.json file
 
-Uses '.' if no argument supplied
+Uses `.` if no argument supplied
 
 __Options:__
 
