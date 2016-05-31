@@ -13,12 +13,19 @@ $ npm install -g pkg-version
 ## Synopsis
 
 ```bash
-$ pkg-version <folder>
+$ pkg-version [<folder>] [<options>]
 ```
 
 - \<folder>: A folder containing a package.json file
 
 Uses '.' if no argument supplied
+
+*Options:*
+
+- -a Include all dependencies (default).
+- -s Include all dependencies that appear in `dependencies`.
+- -d Include all dependencies that appear in `devDependencies`.
+- -p Include all dependencies that appear in `peerDependencies`.
 
 ## Usage
 
