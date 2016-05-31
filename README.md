@@ -22,10 +22,10 @@ Uses '.' if no argument supplied
 
 __Options:__
 
-- -a Include all dependencies (default).
-- -s Include all dependencies that appear in `dependencies`.
-- -d Include all dependencies that appear in `devDependencies`.
-- -p Include all dependencies that appear in `peerDependencies`.
+- `-a` Include all dependencies (default).
+- `-s` Include all dependencies that appear in `dependencies`.
+- `-d` Include all dependencies that appear in `devDependencies`.
+- `-p` Include all dependencies that appear in `peerDependencies`.
 
 ## Usage
 
