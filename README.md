@@ -16,9 +16,7 @@ $ npm install -g pkg-version
 $ pkg-version [<folder>] [<options>]
 ```
 
-- \<folder>: A folder containing a package.json file
-
-Uses `.` if no argument supplied
+- \<folder>: A folder containing a package.json file (defaults to current directory).
 
 __Options:__
 
